@@ -1,0 +1,207 @@
+namespace Rodina
+{
+    abstract class Clen : IComparable
+    {
+        public string Jmeno { get; set; }
+        public string Funkce { get; private set; }
+        public int Vek { get; set; }
+        private static Random nahoda = new Random();
+        public Clen(string jmeno, string funkce, int vek)
+        {
+            Jmeno = jmeno; Funkce = funkce; Vek = vek;
+        }
+        public override string ToString()
+        {
+            return string.Format("\n\n\n Jméno: {0}\n\n Funkce: {1}\n\n Vìk: {2} let", Jmeno, Funkce, Vek);
+        }
+        public abstract string Pracuj();
+        public int CompareTo(object objekt)
+        {
+            Clen porovnavac = (Clen)objekt;
+            if (Vek > porovnavac.Vek) return 1;
+            if (Vek < porovnavac.Vek) return -1;
+            return Jmeno.CompareTo(porovnavac.Jmeno);
+        }
+        public static Clen operator +(Clen clen1,Clen clen2)
+        {
+            if (((clen1 is Otec) && (clen2 is Matka)) || ((clen1 is Matka) && (clen2 is Otec)))
+            {
+                if (nahoda.Next(2) == 0) return new Dite("s zatím neurèeným jménem", "syn", 0);
+                else return new Dite("zatím neurèeno", "dcera", 0);
+            }
+            return null;
+        }
+    }
+    class Otec : Clen
+    {
+        public Otec(string jmeno, string funkce, int vek) : base(jmeno, funkce, vek)
+        { }
+        public override string Pracuj()
+        {
+            return string.Format("\n\n Programuji. {0}, {1}", Jmeno, Funkce);
+        }
+    }
+    class Matka : Clen
+    {
+        public Matka(string jmeno, string funkce, int vek) : base(jmeno, funkce, vek)
+        { }
+        public override string Pracuj()
+        {
+            return string.Format("\n\n Šiju. {0}, {1}", Jmeno, Funkce);
+        }
+    }
+    class Dite : Clen
+    {
+        public Dite(string jmeno, string funkce, int vek) : base(jmeno, funkce, vek)
+        { }
+        public override string Pracuj()
+        {
+            return string.Format("\n\n Rostu a uèím se. {0}, {1}", Jmeno, Funkce);
+        }
+    }
+    class Rodina
+    {
+        List<Clen> rodina = new List<Clen>(); Otec otec = new Otec("", "otec", 30); Matka matka = new Matka("", "matka", 25);
+        Clen dite1; Clen dite2; Clen dite3;
+        public void PridaniOtceAMatky(string otecJmeno, string matkaJmeno)
+        {
+            Otec otec = new Otec(otecJmeno, "otec", 30);rodina.Add(otec);
+            Matka matka=new Matka(matkaJmeno,"matka",25); rodina.Add(matka);
+        }
+        public string PridaniClena(int vek)
+        {
+            if (dite1 ==null) { Clen dite1 = otec+matka; rodina.Add(dite1); return string.Format("\n\n {0} se stává souèástí rodiny.",dite1.Funkce); }
+            if (dite2 == null) { Clen dite2 = otec + matka; rodina.Add(dite2); return string.Format("\n\n {0} se stává souèástí rodiny.", dite2.Funkce); }
+            if (dite3 == null) { Clen dite3 = otec + matka; rodina.Add(dite3); return string.Format("\n\n {0} se stává souèástí rodiny.", dite3.Funkce); }
+            else return "\n\n Maximální poèet dìtí 3 je již naplnìn";
+        }
+        public List<Clen> NalezeniClenu()
+        {
+            List<Clen> nalezeniClenove = new List<Clen>();
+            foreach (Clen clen in rodina) nalezeniClenove.Add(clen);nalezeniClenove.Sort();
+            return nalezeniClenove;
+        }
+        public void PosunCasu(int posunLet)
+        {
+            List<Clen> clenoveVRodine = NalezeniClenu();
+            foreach (Clen clen in clenoveVRodine) { clen.Vek += posunLet; }
+        }
+        public string OdchodDitete(int vek)
+        {
+            List<Clen> clenoveVRodine = NalezeniClenu();
+            foreach (Clen clen in clenoveVRodine)
+            {
+                if ((clen.Vek == vek) && (!(clen is Otec)) && (!(clen is Matka))) rodina.Remove(clen);
+            }
+            return "\n\n Pokud jsi zadal vìk dítìte, odchod se podaøil - ovìø výpisem. Pokud vìk otce èi matky odchod se nepodaøil";
+        }
+    }
+    class RizeniRodiny
+    {
+        Rodina rodina = new Rodina(); 
+        public void PridejOtceAMatku()
+        {
+            Console.Clear();
+            Console.Write("\n\n Zadej jméno otce: ");string otecJmeno = Console.ReadLine();
+            Console.Write("\n\n Zadej jméno matky: "); string matkaJmeno = Console.ReadLine();
+            rodina.PridaniOtceAMatky(otecJmeno,matkaJmeno);
+        }
+        public void NarozeniDitete()
+        {
+            Console.Clear();
+            bool kontrola=KontrolaVeku(0);
+            if (kontrola == true) PridejClena(0);
+            else { Console.WriteLine("\n\n Jiný èlen rodiny již má tento vìk. Èekej ....");Thread.Sleep(3000); }
+        }
+        private bool KontrolaVeku(int vek)
+        {
+            List<Clen> clenoveVRodine = rodina.NalezeniClenu();
+            foreach (Clen clen in clenoveVRodine)
+            {
+                if (vek == clen.Vek) return false;
+            }
+            return true;
+        }
+        public void PridejClena(int vek)
+        {
+            string vysledek = rodina.PridaniClena(vek); Console.Clear();Console.WriteLine(vysledek + "\n\n\n Èekej ...");Thread.Sleep(3000);
+        }
+        public void NajdiCleny()
+        {
+            List<Clen> nalezeniClenove = rodina.NalezeniClenu();
+            Console.Clear();Console.WriteLine("\n\n V rodinì jsou tito èlenové: ");
+            foreach (Clen clen in nalezeniClenove) { Console.WriteLine(clen); }    
+            Console.WriteLine("\n\n\n Stiskni enter");Console.ReadKey();
+        }
+        public void PojmenujDite()
+        {
+            Console.Clear();
+            List<Clen> clenoveRodiny = rodina.NalezeniClenu();
+            Console.Write("\n\n Jak se bude jmenovat tvoje právì narozené dítì? ");string jmeno = Console.ReadLine();
+            foreach (Clen clen in clenoveRodiny)
+            {
+                if (clen.Vek == 0) { clen.Jmeno = jmeno;Console.WriteLine("\n\n Dítìti dáno jméno: {0}, èekej ... ", clen.Jmeno);Thread.Sleep(3000); }
+            }
+        }     
+        public void Pracuj()
+        {
+            Console.Clear();
+            List<Clen> nalezeniClenove = rodina.NalezeniClenu();
+            foreach (Clen clen in nalezeniClenove)
+            {
+                if (clen is Otec) Console.WriteLine((clen as Otec).Pracuj());
+                if (clen is Matka) Console.WriteLine((clen as Matka).Pracuj());
+                if (clen is Dite) Console.WriteLine((clen as Dite).Pracuj());
+            }
+            Console.WriteLine("\n\n\n Stiskni enter");Console.ReadKey();
+        }
+        public void PosunCas()
+        {
+            Console.Clear();
+            Console.Write("\n\n O kolik let chceš posunout èas? ");int posunLet;while (!int.TryParse(Console.ReadLine(), out posunLet)) Console.Write("\n\n Musíš zadat celé èíslo, zadej znovu: ");
+            rodina.PosunCasu(posunLet);
+            Console.WriteLine("\n\n Èas byl posunut o {0} let.", posunLet);
+        }
+        public void OdchodDitete()
+        {
+            Console.Clear();
+            Console.Write("\n\n Zadej vìk dítìte, které odchází od rodièù aby si založilo svou vlastní rodinu: ");int vek;while (!int.TryParse(Console.ReadLine(), out vek)) Console.Write("\n\n Špatnì, musíš zadat celé èíslo,zadej znovu: ");
+            string vysledek = rodina.OdchodDitete(vek);
+            Console.WriteLine(vysledek + ".  Èekej ...");Thread.Sleep(3000);
+        }
+        public void Uvod()
+        {
+            Console.Clear();
+            Console.WriteLine("\n\n Nejprve tì program požádá o zadání jména otce a matky. Potom se octneš v menu. Nech si vypsat rodinu. Narozením dítìte se náhodou urèuje syn nebo dcera.");
+            Console.WriteLine("\n Pøi narození dítì má 0 let. Pøed pojmenováním dítìte si vypiš rodinu aby si vìdìl zda pojmenováváš syna nebo dceru. ");
+            Console.WriteLine("\n Pøed narozením dalšího dítìte musíš posunout èas, nemohou být v rodinì èlenové o stejném vìku.Posunem èasu všichni zestárnou. ");
+            Console.WriteLine("\n Pøed odchodem daného dítìte si zjisti jeho vìk, na který budeš tázán. Stiskni enter");Console.ReadKey();
+        }
+    }
+    class Program
+    {
+        static void Main()
+        {
+            RizeniRodiny rizeniRodiny = new RizeniRodiny();
+            rizeniRodiny.PridejOtceAMatku();
+            char volba = '0';while (volba !='8')
+            {
+                Console.Clear();
+                Console.WriteLine("\n\n 1 - Pokyny\n\n 2 - Výpis rodiny\n\n 3 - Narození dítìte\n\n 4 - Pojmenování právì narozeného dítìte\n\n 5 - Život rodiny\n\n 6 - Posun èasu\n\n 7 - Odchod/osamostatnìní dítìte\n\n 8 - Ukonèení aplikace");
+                volba = Console.ReadKey().KeyChar;
+                switch (volba)
+                {
+                    case '1':rizeniRodiny.Uvod();break;
+                    case '2':rizeniRodiny.NajdiCleny();break;
+                    case '3':rizeniRodiny.NarozeniDitete();break;
+                    case '4':rizeniRodiny.PojmenujDite();break;
+                    case '5':rizeniRodiny.Pracuj();break;
+                    case '6':rizeniRodiny.PosunCas();break;
+                    case '7':rizeniRodiny.OdchodDitete();break;
+                    case '8':Console.Clear();Console.WriteLine("\n\n A P L I K A C E   U K O N È E N A\n\n\n");break;
+                    default: Console.WriteLine("\n\n Neplatná volba, musíš si zvolit volbu 1-8, stiskni enter ...");Console.ReadKey();break;
+                }
+            }
+        }
+    }
+}
